@@ -1,0 +1,77 @@
+USE [DB_SCRUM_PLANNING];
+GO
+
+-- ============================================================================
+-- PRUEBA 1: TABLAS DE CATÁLOGO / SEGURIDAD (Sin dependencias externas)
+-- ============================================================================
+
+-- 1. PROBAR INSERTAR UN ROL
+EXEC SQM_SECURITY.USP_TBL_Roles_Insert
+    @rolName = 'Scrum Master',
+    @rolCreatorId = 1,
+    @rolEnable = 1;
+
+-- 2. PROBAR INSERTAR UN ESTADO
+EXEC SQM_CATALOGS.USP_TBL_Status_Insert
+    @statusName = 'En Progreso',
+    @statusCreatorId = 1,
+    @statusEnable = 1;
+
+-- 3. PROBAR LISTAR CON PAGINACIÓN (Muestra Página 1 con máximo 10 registros)
+EXEC SQM_SECURITY.USP_TBL_Roles_List
+    @PageNumber = 1,
+    @PageSize = 10;
+
+EXEC SQM_CATALOGS.USP_TBL_Status_List
+    @PageNumber = 1,
+    @PageSize = 10;
+
+-- 4. PROBAR ACTUALIZAR UN REGISTRO (Actualizamos el StatusId = 1)
+EXEC SQM_CATALOGS.USP_TBL_Status_Update
+    @statusId = 1,
+    @statusName = 'En Progreso (Modificado)',
+    @statusModificatorId = 1,
+    @statusEnable = 1;
+
+-- Volvemos a listar para verificar que cambió el nombre
+EXEC SQM_CATALOGS.USP_TBL_Status_List
+    @PageNumber = 1,
+    @PageSize = 10;
+GO
+
+
+-- ============================================================================
+-- PRUEBA 2: TABLAS CON DEPENDENCIAS (Ej. Usuarios, que depende de Roles)
+-- ============================================================================
+
+-- 1. INSERTAR UN USUARIO (Usando @userRolId = 1 creado previamente)
+EXEC SQM_SECURITY.USP_TBL_Users_Insert
+    @userFullName = 'Carlos Mendoza',
+    @userName = 'cmendoza',
+    @userEmail = 'carlos@empresa.com',
+    @userPassword = 0x010203040506, -- Ejemplo en bytes (VARBINARY)
+    @userRolId = 1,                  -- Asocia al Rol 1 creado arriba
+    @userCreatorId = 1,
+    @userEnable = 1;
+
+-- 2. LISTAR USUARIOS (Página 1, tamaño de página 5)
+EXEC SQM_SECURITY.USP_TBL_Users_List
+    @PageNumber = 1,
+    @PageSize = 5;
+
+-- 3. ACTUALIZAR USUARIO (Cambiamos el correo del UserId = 1)
+EXEC SQM_SECURITY.USP_TBL_Users_Update
+    @userId = 1,
+    @userFullName = 'Carlos Mendoza',
+    @userName = 'cmendoza',
+    @userEmail = 'carlos.mendoza_nuevo@empresa.com',
+    @userPassword = 0x010203040506,
+    @userRolId = 1,
+    @userModificatorId = 1,
+    @userEnable = 1;
+
+-- Volvemos a listar usuarios para comprobar el cambio
+EXEC SQM_SECURITY.USP_TBL_Users_List
+    @PageNumber = 1,
+    @PageSize = 5;
+GO
